@@ -1,7 +1,8 @@
 from openai import OpenAI
-
+import dotenv
+api_key = dotenv.dotenv_values(".env")["DEEPSEEK_API_KEY"]
 def summarize_with_deepseek(text, prompt_extra="Resume en no más de 3 líneas la película según el título que te adjuntare a continuacion: "):
-    client = OpenAI(api_key="sk-6c32bff31fa04637b47b54d31b7b5f95", base_url="https://api.deepseek.com")
+    client = OpenAI(api_key, base_url="https://api.deepseek.com")
     prompt = f"{prompt_extra}\n\n{text}"
 
     response = client.chat.completions.create(
