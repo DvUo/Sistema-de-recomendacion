@@ -1,5 +1,5 @@
 from sklearn.metrics.pairwise import cosine_similarity
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from collections import defaultdict
 from pydantic import BaseModel
 import chromadb
@@ -16,12 +16,12 @@ movies_df = pd.read_csv("movies.csv")
 
 class RecommendationRequest(BaseModel):
     user_id: int
-    top_n: int = 5
+    
 
 class RecommendationResponse(BaseModel):
-    user_id: int
+    message: str
     recommendations: list[dict]
-    explanation: str
+    
 
 def get_recommendations(user_id: int):
     client = chromadb.PersistentClient(path="chroma_db")
@@ -51,8 +51,8 @@ def get_recommendations(user_id: int):
         if similar_users:
             # Obtener recomendaciones
             movie_recommendations = get_movie_recommendations(similar_users, target_ratings, similar_users_ponderation)
-            get_message_recomendation(movie_recommendations)
-            return movie_recommendations
+            recommendations = get_message_recomendation(movie_recommendations)
+            return recommendations
         else:
             logger.info("No se encontraron usuarios similares.")
             return None
@@ -148,6 +148,7 @@ def get_movie_recommendations(similar_users, target_ratings, matrix_similar_user
 
 def get_message_recomendation(recomendations):
     try:
+        list_recommendations = []
         for data in recomendations:
             movie_id = data['movieId']
             
@@ -156,41 +157,37 @@ def get_message_recomendation(recomendations):
                 movie = movies_df.loc[movies_df['movie_id'] == int(movie_id)]
                 
                 if not movie.empty:
-                    return print("Segun la puntuacion de otros usuarios, la pelicula recomendada es: ", movie['title'].values[0]
-                            , "de generos: " , movie['genres'].values[0], "con una puntuacion de: ", score, "y una sinopsis de: ", movie['summary'].values[0]) 
+                    movie_info = {
+                        "title": movie['title'].values[0],
+                        "genres": movie['genres'].values[0],
+                        "score": score,
+                        "summary": movie['summary'].values[0] if 'summary' in movie.columns else ""
+                    }
+                    list_recommendations.append(movie_info)
                 else:
                     logger.warning(f"No se encontró la película con ID: {movie_id}")
+        
+        return list_recommendations
             
     except Exception as e:
         logger.error(f"Error al obtener detalles de la película: {str(e)}")
         return None
-get_recommendations(1)
-# @app.post("/recommend", response_model=RecommendationResponse)
-# async def recommend(request: RecommendationRequest):
-#     recommendations = get_recommendations(request.user_id, request.top_n)
-    
-#     if recommendations is None or len(recommendations) == 0:
-#         return RecommendationResponse(
-#             user_id=request.user_id,
-#             recommendations=[],
-#             explanation="No se encontró el usuario o no hay recomendaciones disponibles."
-#         )
-    
-#     explanation = (
-#         "Recomendaciones basadas en las valoraciones de usuarios con patrones de visualización similares. "
-#         "Las películas son seleccionadas por su alta calificación promedio entre usuarios similares."
-#     )
-    
-#     return RecommendationResponse(
-#         user_id=request.user_id,
-#         recommendations=recommendations,
-#         explanation=explanation
-#     )
 
-# @app.get("/health")
-# async def health_check():
-#     return {"status": "ok"}
+@app.post("/recommend", response_model=RecommendationResponse)
+async def recommend(request: RecommendationRequest):
+    recommendations = get_recommendations(request.user_id)
+    message= "Te recomendamos las siguientes películas segun la calificacion de usuarios similares:"
+    
+    
+    return RecommendationResponse(
+        message=message,
+        recommendations=recommendations,
+    ) 
 
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
