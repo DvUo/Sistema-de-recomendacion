@@ -11,6 +11,8 @@ fake = Faker()
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
 def initialize_movies():
+    # Carga y prepara el dataset de películas, genera resúmenes y embeddings para cada película.
+    
     # Columnas reales del dataset MovieLens 100K (u.item)
     movies_cols = [
         "movie_id",       
@@ -81,7 +83,8 @@ def initialize_movies():
     return movies
 
 def generate_users(movies):
-    # Generar 30 usuarios con ratings aleatorios
+    # Genera 30 usuarios ficticios con ratings aleatorios para un subconjunto de películas.
+    
     users = []
     movie_ids = movies["movie_id"].tolist()
     
@@ -104,7 +107,8 @@ def generate_users(movies):
     return users
 
 def save_to_chroma(movies, users):
-    # Configurar ChromaDB persistente
+    # Guarda las películas y usuarios generados en colecciones persistentes de ChromaDB.
+    
     client = chromadb.PersistentClient(path="chroma_db")
     
     # Colección de películas

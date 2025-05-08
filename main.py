@@ -24,6 +24,9 @@ class RecommendationResponse(BaseModel):
     
 
 def get_recommendations(user_id: int):
+    # Obtiene recomendaciones de películas para un usuario dado.
+    # Busca usuarios similares, calcula similitud y genera recomendaciones personalizadas.
+    
     client = chromadb.PersistentClient(path="chroma_db")
     
     try:
@@ -62,7 +65,7 @@ def get_recommendations(user_id: int):
         return None
 
 def convert_data_to_matrix(similar_users,target_ratings,target_username):
-    # Convertir los datos a un DataFrame
+    # Convierte los ratings de usuarios similares y del usuario objetivo en una matriz de utilidad (usuarios vs películas).
     rows = []
 
     # Agregar el usuario objetivo
@@ -93,6 +96,9 @@ def convert_data_to_matrix(similar_users,target_ratings,target_username):
     return user_movie_matrix
 
 def get_users_similar_to_target(target_ratings, all_users,target_username):
+    # Busca usuarios que tengan al menos 5 películas en común con el usuario objetivo.
+    # Devuelve una lista de usuarios similares.
+    
     similar_users = []
     for user in all_users['metadatas']:
         if user['username'] == target_username:
@@ -109,12 +115,18 @@ def get_users_similar_to_target(target_ratings, all_users,target_username):
     return similar_users
 
 def get_ponderation_users(matrix_similar_users):
+    # Calcula la matriz de similitud entre usuarios usando la similitud del coseno.
+    # Devuelve un DataFrame con los valores de similitud.
     
     similarities = cosine_similarity(matrix_similar_users)
     sim_df = pd.DataFrame(similarities, columns=matrix_similar_users.index, index=matrix_similar_users.index)
     return sim_df
 
 def get_movie_recommendations(similar_users, target_ratings, matrix_similar_users):
+    # Genera recomendaciones de películas que el usuario objetivo no ha visto,
+    # ponderando las calificaciones de usuarios similares según su similitud.
+    
+    
     movies_watched = set(target_ratings.keys())
     score_sums = defaultdict(float)
     sim_sums = defaultdict(float)
@@ -147,6 +159,9 @@ def get_movie_recommendations(similar_users, target_ratings, matrix_similar_user
     return recommendations[:5]
 
 def get_message_recomendation(recomendations):
+    # Toma las recomendaciones y busca detalles de las películas en el DataFrame.
+    # Devuelve una lista de películas recomendadas con título, géneros, puntuación y resumen.
+    
     try:
         list_recommendations = []
         for data in recomendations:
@@ -175,6 +190,8 @@ def get_message_recomendation(recomendations):
 
 @app.post("/recommend", response_model=RecommendationResponse)
 async def recommend(request: RecommendationRequest):
+    # Endpoint de la API que recibe un user_id y devuelve recomendaciones de películas.
+    
     recommendations = get_recommendations(request.user_id)
     message= "Te recomendamos las siguientes películas segun la calificacion de usuarios similares:"
     
@@ -186,6 +203,8 @@ async def recommend(request: RecommendationRequest):
 
 @app.get("/health")
 async def health_check():
+    # Endpoint de salud para verificar que el servicio está funcionando.
+    
     return {"status": "ok"}
 
 if __name__ == "__main__":
