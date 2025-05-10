@@ -115,4 +115,6 @@ Cargar los datos de películas desde movies.csv.
   
  - La clave de API de DeepSeek es obligatoria para la generación de resúmenes automáticos.
 
+ - En caso de no funcionar el sklearn, instalar por cuenta propia con el siguiente comando: ```pip install scikit-learn```
+
 
