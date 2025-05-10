@@ -12,6 +12,7 @@ Este proyecto implementa un sistema de recomendación de películas basado en la
 - `data/movies.tsv`: Archivo fuente con los datos originales de las películas (formato MovieLens).
 - `requirements.txt`: Lista de dependencias necesarias para ejecutar el proyecto.
 - `.env`: Archivo de variables de entorno, donde se debe colocar la clave de API de DeepSeek.
+> En caso de querer actualizar la base de datos recordar crear el archivo .env e incluir su api key -> DEEPSEEK_API_KEY= api-key
 
 ---
 
