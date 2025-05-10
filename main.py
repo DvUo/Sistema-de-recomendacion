@@ -176,7 +176,7 @@ def get_message_recomendation(recomendations):
                         "title": movie['title'].values[0],
                         "genres": movie['genres'].values[0],
                         "score": score,
-                        "summary": movie['summary'].values[0] if 'summary' in movie.columns else ""
+                        "summary": movie['summary'].values[0] 
                     }
                     list_recommendations.append(movie_info)
                 else:
